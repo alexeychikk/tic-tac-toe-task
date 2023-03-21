@@ -103,20 +103,98 @@
 			 * в клетке - крестик или нолик или пусто. Если там крестик или нолик -
 			 * то типом параметра должна быть строка "X" или "O", если пусто - undefined.
 			 */
-			function handleCellClick(cellIndex, fillSign) {
-				// Тебе нужно написать реализацию этой функции.
-				// Я хочу, чтобы после того, как игрок нажимает на пустую клетку
-				// ставился крестик, после чего компьютер автоматом ставил
-				// нолик в любую незаполненную клетку.
-				// Ну и так, пока кто-то не выиграет - игрок, либо компьютер, либо
-				// ничья.
-				// Ты можешь объявлять сколько угодно переменных, где угодно.
-				// Вообще, эксперементируй с этой программой как хочешь.
-				// Главное, чтобы результат был.
 
-				// то что ниже можешь удалить, либо поклацать, посмотреть что будет
-				console.log(cellIndex, fillSign);
-				fill(cellIndex, "🍆");
+			function createScoreHolder() {
+				return {
+					rows: {},
+					cols: {},
+					diagonals: {
+						left: 0,
+						right: 0,
+					},
+				};
+			}
+
+			function fillPlayerScore(x, y, playerSign) {
+				const playerScores = game.scores[playerSign];
+				playerScores.rows[x] = (playerScores.rows[x] || 0) + 1;
+				playerScores.cols[y] = (playerScores.cols[y] || 0) + 1;
+				if (x === y) playerScores.diagonals.left++;
+				if (x + y === fieldSize - 1) playerScores.diagonals.right++;
+				game.turnCount++;
+				game.field[x * fieldSize + y] = playerSign;
+			}
+
+			function convertCellIndexToXY(cellIndex) {
+				return {
+					x: Math.floor(cellIndex / fieldSize),
+					y: cellIndex % fieldSize,
+				};
+			}
+
+			function getWinner(x, y, playerSign) {
+				const playerScores = game.scores[playerSign];
+				if (
+					playerScores.rows[x] === fieldSize ||
+					playerScores.cols[y] === fieldSize ||
+					playerScores.diagonals.left === fieldSize ||
+					playerScores.diagonals.right === fieldSize
+				) {
+					return playerSign;
+				}
+				if (game.turnCount === fieldSize * fieldSize) {
+					return "draw";
+				}
+			}
+
+			function makeTurn(cellIndex, playerSign) {
+				const { x, y } = convertCellIndexToXY(cellIndex);
+				fillPlayerScore(x, y, playerSign);
+				fill(cellIndex, playerSign);
+				const winner = getWinner(x, y, playerSign);
+				if (winner) {
+					game.winner = winner;
+					showWinner();
+				}
+			}
+
+			function showWinner() {
+				setTimeout(() => {
+					alert(
+						game.winner === "draw"
+							? "It's a fucking draw, noob!"
+							: `${game.winner} wins!`
+					);
+				}, 250);
+			}
+
+			function getRandomEmptyCellIndex() {
+				const emptyCellIndexes = game.field
+					.map((sign, index) => (sign !== undefined ? undefined : index))
+					.filter((value) => value !== undefined);
+				const randomArrayIndex = _.random(0, emptyCellIndexes.length - 1);
+				return emptyCellIndexes[randomArrayIndex];
+			}
+
+			const game = {
+				field: new Array(fieldSize * fieldSize).fill(),
+				scores: {
+					X: createScoreHolder(),
+					O: createScoreHolder(),
+				},
+				turnCount: 0,
+				/** `playerSign` or "draw" or undefined */
+				winner: undefined,
+			};
+
+			function handleCellClick(cellIndex, fillSign) {
+				if (fillSign || game.winner) return;
+				makeTurn(cellIndex, "X");
+				if (game.winner) return;
+
+				// Making AI turn
+				const randomIndex = getRandomEmptyCellIndex();
+				makeTurn(randomIndex, "O");
 			}
 
 			/**
