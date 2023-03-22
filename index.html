@@ -54,6 +54,7 @@
 
   <body>
     <div id="app"></div>
+    <div id="win"></div>
 
     <script>
       const fieldSize = 3;
@@ -133,14 +134,14 @@
         cellEl.innerHTML = `<div>${sign}</div>`;
       }
       const cellsValues = [
-        "x",
-        0,
         undefined,
         undefined,
         undefined,
         undefined,
         undefined,
-        "y",
+        undefined,
+        undefined,
+        undefined,
         undefined,
       ];
       // function handleCellClick(cellIndex, fillSign) {
@@ -165,11 +166,18 @@
       //   break;
       // }
       // }
+      let winner;
       function handleCellClick(cellIndex, fillSign) {
+        if (winner !== undefined) {
+          return;
+        }
         if (fillSign === undefined) {
           fill(cellIndex, "X");
           cellsValues[cellIndex] = "X";
-
+          announceWinner();
+          if (cellsValues.every((elem) => elem !== undefined)) {
+            return;
+          }
           while (true) {
             let randomCellIndex = Math.floor(
               Math.random() * cellsValues.length
@@ -177,12 +185,48 @@
             if (cellsValues[randomCellIndex] === undefined) {
               fill(randomCellIndex, "0");
               cellsValues[randomCellIndex] = "0";
-              break;
-            }
-            if (cellsValues.every((elem) => elem !== undefined)) {
+              announceWinner();
               break;
             }
           }
+        }
+      }
+      function announceWinner() {
+        winner = getWinner(cellsValues);
+        if (winner !== undefined) {
+          if (winner !== "draw") {
+            return console.log(winner + " win");
+          }
+          return console.log("draw");
+        }
+      }
+      function getWinner(arr) {
+        if (
+          (arr[0] === "X" && arr[1] === "X" && arr[2] === "X") ||
+          (arr[3] === "X" && arr[4] === "X" && arr[5] === "X") ||
+          (arr[6] === "X" && arr[7] === "X" && arr[8] === "X") ||
+          (arr[0] === "X" && arr[3] === "X" && arr[6] === "X") ||
+          (arr[1] === "X" && arr[4] === "X" && arr[7] === "X") ||
+          (arr[2] === "X" && arr[5] === "X" && arr[8] === "X") ||
+          (arr[2] === "X" && arr[4] === "X" && arr[6] === "X") ||
+          (arr[0] === "X" && arr[4] === "X" && arr[8] === "X")
+        ) {
+          return "X";
+        }
+        if (
+          (arr[0] === "0" && arr[1] === "0" && arr[2] === "0") ||
+          (arr[3] === "0" && arr[4] === "0" && arr[5] === "0") ||
+          (arr[6] === "0" && arr[7] === "0" && arr[8] === "0") ||
+          (arr[0] === "0" && arr[3] === "0" && arr[6] === "0") ||
+          (arr[1] === "0" && arr[4] === "0" && arr[7] === "0") ||
+          (arr[2] === "0" && arr[5] === "0" && arr[8] === "0") ||
+          (arr[2] === "0" && arr[4] === "0" && arr[6] === "0") ||
+          (arr[0] === "0" && arr[4] === "0" && arr[8] === "0")
+        ) {
+          return "0";
+        }
+        if (cellsValues.every((elem) => elem !== undefined)) {
+          return "draw";
         }
       }
     </script>
