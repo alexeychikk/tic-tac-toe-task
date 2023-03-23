@@ -168,14 +168,6 @@
 				}, 250);
 			}
 
-			function getRandomEmptyCellIndex() {
-				const emptyCellIndexes = game.field
-					.map((sign, index) => (sign !== undefined ? undefined : index))
-					.filter((value) => value !== undefined);
-				const randomArrayIndex = _.random(0, emptyCellIndexes.length - 1);
-				return emptyCellIndexes[randomArrayIndex];
-			}
-
 			const game = {
 				field: new Array(fieldSize * fieldSize).fill(),
 				scores: {
@@ -185,6 +177,14 @@
 				turnCount: 0,
 				/** `playerSign` or "draw" or undefined */
 				winner: undefined,
+
+				getRandomEmptyCellIndex: function getRandomEmptyCellIndex() {
+					const emptyCellIndexes = game.field
+						.map((sign, index) => (sign !== undefined ? undefined : index))
+						.filter((value) => value !== undefined);
+					const randomArrayIndex = _.random(0, emptyCellIndexes.length - 1);
+					return emptyCellIndexes[randomArrayIndex];
+				},
 			};
 
 			function handleCellClick(cellIndex, fillSign) {
