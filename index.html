@@ -50,169 +50,17 @@
 			}
 		</style>
 		<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21"></script>
+		<script src="./src/ScoreHolder.js"></script>
+		<script src="./src/Field.js"></script>
+		<script src="./src/Game.js"></script>
 	</head>
 
 	<body>
 		<div id="app"></div>
 
 		<script>
-			const fieldSize = 3;
-
-			// Тут происходит генерация поля, пока не вдавайся в детали
-			// хотя тут ничего сложного, если разобраться
-			document.getElementById("app").innerHTML = `
-<div class="field"> 
-  ${_.times(
-		fieldSize,
-		(i) => `
-  <div class="row" id="row${i}">
-    ${_.times(
-			fieldSize,
-			(j) => `<div class="col" id="col${i * fieldSize + j}"></div>`
-		).join("")}
-  </div>`
-	).join("")}
-</div>
-`;
-
-			// Тут я беру каждую клетку и регистрирую событие чтобы
-			// по нажатию ЛКМ по клетке выполнялась функция
-			// тоже пока не вдавайся в детали
-			_.times(fieldSize * fieldSize, (i) => {
-				const cellEl = document.getElementById(`col${i}`);
-				cellEl.onclick = () => handleCellClick(i, cellEl.dataset.fillSign);
-			});
-
-			// Вот тут уже придётся тебе поработать.
-			// 👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇🖕👇👇👇
-			/**
-			 * Не пугайся такого комментария. Это называется JSDoc. Он позволяет
-			 * добавлять документацию к параметрам функций и т.п.
-			 * Я здесь опишу, что значит каждый параметр, чтобы ты понимал,
-			 * как пользоваться функцией и что в итоге нужно сделать.
-			 * Эта функция вызывается тогда, когда ты кликаешь левой кнопкой по клетке.
-			 * Когда ты кликаешь, я передаю в функцию 3 параметра, в которых содержится
-			 * информация о клетке, на которую ты нажал:
-			 * @param {Number} cellIndex - это индекс клетки, от 0 до 8, если считать
-			 * слева направо сверху вниз, то есть
-			 * верхняя левая клетка 0,
-			 * верхняя правая 2,
-			 * нижняя левая 6,
-			 * нижняя правая 8
-			 * @param {String} fillSign - этот параметр показывает, что уже стоит
-			 * в клетке - крестик или нолик или пусто. Если там крестик или нолик -
-			 * то типом параметра должна быть строка "X" или "O", если пусто - undefined.
-			 */
-
-			function createScoreHolder() {
-				return {
-					rows: {},
-					cols: {},
-					diagonals: {
-						left: 0,
-						right: 0,
-					},
-				};
-			}
-
-			function fillPlayerScore(x, y, playerSign) {
-				const playerScores = game.scores[playerSign];
-				playerScores.rows[x] = (playerScores.rows[x] || 0) + 1;
-				playerScores.cols[y] = (playerScores.cols[y] || 0) + 1;
-				if (x === y) playerScores.diagonals.left++;
-				if (x + y === fieldSize - 1) playerScores.diagonals.right++;
-				game.turnCount++;
-				game.field[x * fieldSize + y] = playerSign;
-			}
-
-			function convertCellIndexToXY(cellIndex) {
-				return {
-					x: Math.floor(cellIndex / fieldSize),
-					y: cellIndex % fieldSize,
-				};
-			}
-
-			function getWinner(x, y, playerSign) {
-				const playerScores = game.scores[playerSign];
-				if (
-					playerScores.rows[x] === fieldSize ||
-					playerScores.cols[y] === fieldSize ||
-					playerScores.diagonals.left === fieldSize ||
-					playerScores.diagonals.right === fieldSize
-				) {
-					return playerSign;
-				}
-				if (game.turnCount === fieldSize * fieldSize) {
-					return "draw";
-				}
-			}
-
-			function makeTurn(cellIndex, playerSign) {
-				const { x, y } = convertCellIndexToXY(cellIndex);
-				fillPlayerScore(x, y, playerSign);
-				fill(cellIndex, playerSign);
-				const winner = getWinner(x, y, playerSign);
-				if (winner) {
-					game.winner = winner;
-					showWinner();
-				}
-			}
-
-			function showWinner() {
-				setTimeout(() => {
-					alert(
-						game.winner === "draw"
-							? "It's a fucking draw, noob!"
-							: `${game.winner} wins!`
-					);
-				}, 250);
-			}
-
-			const game = {
-				field: new Array(fieldSize * fieldSize).fill(),
-				scores: {
-					X: createScoreHolder(),
-					O: createScoreHolder(),
-				},
-				turnCount: 0,
-				/** `playerSign` or "draw" or undefined */
-				winner: undefined,
-
-				getRandomEmptyCellIndex: function getRandomEmptyCellIndex() {
-					const emptyCellIndexes = game.field
-						.map((sign, index) => (sign !== undefined ? undefined : index))
-						.filter((value) => value !== undefined);
-					const randomArrayIndex = _.random(0, emptyCellIndexes.length - 1);
-					return emptyCellIndexes[randomArrayIndex];
-				},
-			};
-
-			function handleCellClick(cellIndex, fillSign) {
-				if (fillSign || game.winner) return;
-				makeTurn(cellIndex, "X");
-				if (game.winner) return;
-
-				// Making AI turn
-				const randomIndex = getRandomEmptyCellIndex();
-				makeTurn(randomIndex, "O");
-			}
-
-			/**
-			 * Эта функция заполняет клетку значением.
-			 * Другими словами, если по нажатию на клетку ты хочешь,
-			 * чтобы в неё поставился крестик, ты вызываешь fill(4, "X").
-			 * На самом деле, ты туда можешь передать что угодно, хоть fill(0, "Z")
-			 * и сделать вместо крестиков ноликов свою игру с "Y", "Z", блек джеком
-			 * и шлюхами.
-			 * @param {Number} cellIndex - это индекс клетки
-			 * @param {String} sign - чем заполнить клетку, крестиком или ноликом
-			 */
-			function fill(cellIndex, sign) {
-				const cellEl = document.getElementById(`col${cellIndex}`);
-				cellEl.classList.add("filled");
-				cellEl.dataset.fillSign = sign;
-				cellEl.innerHTML = `<div>${sign}</div>`;
-			}
+			const game = new Game(3);
+			game.run();
 		</script>
 	</body>
 </html>
